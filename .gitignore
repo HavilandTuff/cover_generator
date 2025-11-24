@@ -153,3 +153,4 @@ Thumbs.db
 config.local.py
 secrets.json
 .env.local
+gamelist.xml

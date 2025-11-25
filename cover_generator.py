@@ -89,50 +89,39 @@ def list_games(game_system_path: str) -> None:
         print("No games found in gamelist.xml", file=sys.stderr)
         sys.exit(1)
     
+    # Filter games with both image and marquee files
+    complete_games = []
+    
+    for game in games:
+        # Check if both image and marquee are specified
+        if not game['image'] or not game['marquee']:
+            continue
+        
+        # Check if both files exist
+        image_exists, _ = check_file_exists(game_system_path, game['image'])
+        marquee_exists, _ = check_file_exists(game_system_path, game['marquee'])
+        
+        if image_exists and marquee_exists:
+            complete_games.append(game)
+    
     # Display results
     print(f"\n{'='*100}")
-    print(f"Found {len(games)} games in {game_system_path}")
+    print(f"Found {len(complete_games)} games with both image and marquee files")
+    print(f"(Total games in gamelist.xml: {len(games)})")
     print(f"{'='*100}\n")
     
-    missing_files = []
-    
-    for idx, game in enumerate(games, 1):
+    for idx, game in enumerate(complete_games, 1):
         print(f"[{idx}] Game: {game['name']} (ID: {game['id']})")
         print(f"    Path: {game['path']}")
-        
-        # Check image file
-        if game['image']:
-            image_exists, image_full_path = check_file_exists(game_system_path, game['image'])
-            status = "✓" if image_exists else "✗"
-            print(f"    {status} Image: {game['image']}")
-            if not image_exists:
-                missing_files.append((game['name'], 'Image', game['image']))
-        else:
-            print(f"    ⚠ Image: Not specified in gamelist.xml")
-        
-        # Check marquee file
-        if game['marquee']:
-            marquee_exists, marquee_full_path = check_file_exists(game_system_path, game['marquee'])
-            status = "✓" if marquee_exists else "✗"
-            print(f"    {status} Marquee: {game['marquee']}")
-            if not marquee_exists:
-                missing_files.append((game['name'], 'Marquee', game['marquee']))
-        else:
-            print(f"    ⚠ Marquee: Not specified in gamelist.xml")
-        
+        print(f"    Image: {game['image']}")
+        print(f"    Marquee: {game['marquee']}")
         print()
     
     # Summary
     print(f"{'='*100}")
     print(f"Summary:")
-    print(f"  Total games: {len(games)}")
-    print(f"  Missing files: {len(missing_files)}")
-    
-    if missing_files:
-        print(f"\nMissing files:")
-        for game_name, file_type, file_path in missing_files:
-            print(f"  - {game_name}: {file_type} ({file_path})")
-    
+    print(f"  Complete games (with both image and marquee): {len(complete_games)}")
+    print(f"  Incomplete games: {len(games) - len(complete_games)}")
     print(f"{'='*100}\n")
 
 

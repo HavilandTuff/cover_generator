@@ -92,26 +92,53 @@ def list_games(game_system_path: str) -> None:
     
     complete_games = []
     for game in games:
-        # Prefer thumbnail with 'thumb' in filename if present and exists
         thumb_path = game.get('thumbnail', '')
-        thumb_ok = False
+        image_path = None
+        thumb_exists = False
+        image_exists = False
+        thumb_full = ''
+        image_full = ''
+        # Check for thumbnail
         if thumb_path and 'thumb' in os.path.basename(thumb_path).lower():
             thumb_exists, thumb_full = check_file_exists(game_system_path, thumb_path)
-            if thumb_exists:
-                image_path = thumb_full
-                thumb_ok = True
-        if not thumb_ok:
-            # Fallback to image
-            if not game['image']:
-                continue
-            image_exists, image_path = check_file_exists(game_system_path, game['image'])
-            if not image_exists:
-                continue
+        # Check for image
+        if game['image']:
+            image_exists, image_full = check_file_exists(game_system_path, game['image'])
+        # If both exist, ask user which to use
+        chosen_image = None
+        if thumb_exists and image_exists:
+            print(f"\nGame: {game['name']} (ID: {game['id']}) has both image and thumbnail.")
+            print(f"  1. Image: {image_full}")
+            print(f"  2. Thumbnail: {thumb_full}")
+            # Try to display both images using an external viewer (if available)
+            try:
+                import subprocess
+                print("Opening both images for preview...")
+                subprocess.Popen(["xdg-open", image_full])
+                subprocess.Popen(["xdg-open", thumb_full])
+            except Exception:
+                pass
+            while True:
+                choice = input("Choose image to use for card (1=image, 2=thumbnail): ").strip()
+                if choice == '1':
+                    chosen_image = image_full
+                    break
+                elif choice == '2':
+                    chosen_image = thumb_full
+                    break
+                else:
+                    print("Invalid choice. Please enter 1 or 2.")
+        elif thumb_exists:
+            chosen_image = thumb_full
+        elif image_exists:
+            chosen_image = image_full
+        else:
+            continue
         if not game['marquee']:
             continue
         marquee_exists, _ = check_file_exists(game_system_path, game['marquee'])
         if marquee_exists:
-            game['image_path'] = image_path
+            game['image_path'] = chosen_image
             complete_games.append(game)
 
     print(f"\n{'='*100}")

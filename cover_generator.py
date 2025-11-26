@@ -33,6 +33,7 @@ def parse_gamelist(gamelist_path: str) -> List[Dict[str, str]]:
                 'name': game.findtext('name', 'Unknown'),
                 'path': game.findtext('path', 'N/A'),
                 'image': game.findtext('image', ''),
+                'thumbnail': game.findtext('thumbnail', ''),
                 'marquee': game.findtext('marquee', ''),
             }
             games.append(game_info)
@@ -91,11 +92,25 @@ def list_games(game_system_path: str) -> None:
     
     complete_games = []
     for game in games:
-        if not game['image'] or not game['marquee']:
+        # Prefer thumbnail with 'thumb' in filename if present and exists
+        thumb_path = game.get('thumbnail', '')
+        thumb_ok = False
+        if thumb_path and 'thumb' in os.path.basename(thumb_path).lower():
+            thumb_exists, thumb_full = check_file_exists(game_system_path, thumb_path)
+            if thumb_exists:
+                image_path = thumb_full
+                thumb_ok = True
+        if not thumb_ok:
+            # Fallback to image
+            if not game['image']:
+                continue
+            image_exists, image_path = check_file_exists(game_system_path, game['image'])
+            if not image_exists:
+                continue
+        if not game['marquee']:
             continue
-        image_exists, image_path = check_file_exists(game_system_path, game['image'])
         marquee_exists, _ = check_file_exists(game_system_path, game['marquee'])
-        if image_exists and marquee_exists:
+        if marquee_exists:
             game['image_path'] = image_path
             complete_games.append(game)
 

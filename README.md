@@ -1,4 +1,4 @@
-# Cover Generator
+# Cover Generator for Zaparoo service
 
 This project provides a script to generate printable game cover cards for your game system collections. The script processes a `gamelist.xml` file and associated images to create individual game cards and compiles them into printable A4 sheets.
 
